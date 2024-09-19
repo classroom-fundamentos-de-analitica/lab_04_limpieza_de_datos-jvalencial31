@@ -7,14 +7,48 @@ correctamente. Tenga en cuenta datos faltantes y duplicados.
 
 """
 import pandas as pd
+from datetime import datetime
 
-
+def Fecha(x):
+        try:
+            return datetime.strptime(x,'%d/%m/%Y')
+        except:
+            return datetime.strptime(x,'%Y/%m/%d')
 def clean_data():
 
     df = pd.read_csv("solicitudes_credito.csv", sep=";")
+    
+    #datosNa
+    df.isna().sum()
+    df=df.dropna()
+    
+    df["sexo"]=df['sexo'].str.upper()
+    df["tipo_de_emprendimiento"]=df["tipo_de_emprendimiento"].str.upper()
+    df["tipo_de_emprendimiento"]=df["tipo_de_emprendimiento"].str.replace(' ','')
+    df["idea_negocio"]=df["idea_negocio"].str.upper()
+    df["idea_negocio"]=df["idea_negocio"].str.replace(' ','_')
+    df["idea_negocio"]=df["idea_negocio"].str.replace('-','_')
+    df["barrio"]=df["barrio"].str.upper()
+    df["barrio"]=df["barrio"].str.replace('-',' ')
+    df["barrio"]=df["barrio"].str.replace('_',' ')
+    df["estrato"]=df['estrato'].astype('category')
+    df["comuna_ciudadano"]=df['comuna_ciudadano'].astype('category')
+    df["monto_del_credito"]=df['monto_del_credito'].str.replace(',','')
+    df["monto_del_credito"]=df['monto_del_credito'].str.replace('.00','')
+    df["monto_del_credito"]=df['monto_del_credito'].str.replace('.','')
+    df["monto_del_credito"]=df['monto_del_credito'].str.strip('$')
+    df["monto_del_credito"]=df['monto_del_credito'].astype('float')
+    df["línea_credito"]=df["línea_credito"].str.upper()
+    df["línea_credito"]=df["línea_credito"].str.replace(' ','_')
+    df["línea_credito"]=df["línea_credito"].str.replace('-','_')
+    df['fecha_de_beneficio'] = df['fecha_de_beneficio'].apply(lambda x: Fecha(x))
+    df['fecha_de_beneficio'] = df['fecha_de_beneficio'].dt.strftime('%d/%m/%Y')
 
-    #
-    # Inserte su código aquí
-    #
-
+    df.drop(['Unnamed: 0'],axis=1,inplace=True)
+    duplicados = df.duplicated(subset=['tipo_de_emprendimiento','idea_negocio','barrio'],keep=False)
+    df[duplicados].sort_values(by='barrio')
+    
+    df.drop_duplicates(inplace=True)
     return df
+
+print(clean_data())
